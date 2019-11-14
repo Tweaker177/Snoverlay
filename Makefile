@@ -1,5 +1,7 @@
 ARCHS = armv7 arm64 arm64e armv7s
 TARGET = iphone:clang:11.2:7.0
+DEBUG = 0
+FINALPACKAGE = 1
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = Snoverlay
