@@ -5,6 +5,7 @@
 static BOOL enabled = YES;
 static BOOL wallpaperOnly = NO;
 static NSMutableDictionary *prefs = nil;
+const CGFloat firmware =  [[UIDevice currentDevice].systemVersion floatValue];
 
 @interface SBStarkLockOutViewController : UIViewController
 @end
@@ -94,10 +95,11 @@ static void receivedNotification(CFNotificationCenterRef center, void *observer,
 
 
 
-// iOS 7-10
-%hook SBFStaticWallpaperView
 
+%hook SBFStaticWallpaperView
+// iOS 7-11.4.x
 -(void)_setupContentView {
+if(firmware < 12.0) {
 	%orig;
 	// [[NSNotificationCenter defaultCenter] addObserverForName:@"com.leftyfl1p.snoverlay/settingschanged" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
 	// 	__block SBFStaticWallpaperView *weakSelf = self;
@@ -123,7 +125,40 @@ static void receivedNotification(CFNotificationCenterRef center, void *observer,
         object:nil];
 
 	[self handlePrefs];
-}
+} //end if iOS is under 12.0
+else return %orig;
+}  //end of _setupContentView (method that changed in iOS 12 and higher)
+
+-(void)_setupContentViewWithOptions:(NSUInteger)options {
+    if(firmware >= 12.0) {
+	%orig;
+	// [[NSNotificationCenter defaultCenter] addObserverForName:@"com.leftyfl1p.snoverlay/settingschanged" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
+	// 	__block SBFStaticWallpaperView *weakSelf = self;
+
+	// 	if(enabled && wallpaperOnly){
+	// 		if(!weakSelf.snowView) {
+	// 			HBLogDebug(@"turn on2");
+	// 			[weakSelf makeItSnow];
+	// 		}
+			
+	// 	} else {
+	// 		HBLogDebug(@"turn off2");
+	// 		[weakSelf stopSnowing];
+	// 	}
+				
+		
+
+	// }];
+
+	 [[NSNotificationCenter defaultCenter] addObserver:self
+        selector:@selector(handlePrefs) 
+        name:@"com.leftyfl1p.snoverlay/settingschanged"
+        object:nil];
+
+	[self handlePrefs];
+}  //End if iOS 12 or higher
+    else return %orig;
+} //End of method used for iOS 12-13+
 
 %new
 -(void)handlePrefs {
